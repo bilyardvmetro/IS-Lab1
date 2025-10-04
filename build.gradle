@@ -3,7 +3,7 @@ plugins {
     id 'war'
 }
 
-group 'com.WebLab4'
+group 'com.islab1'
 version '1.0-SNAPSHOT'
 
 repositories {

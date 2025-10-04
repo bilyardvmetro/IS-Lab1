@@ -1,9 +1,9 @@
-package com.weblab4.islab1;
+package com.islab1;
 
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 
 @ApplicationPath("/api")
-public class HelloApplication extends Application {
+public class ISLab1Application extends Application {
 
 }

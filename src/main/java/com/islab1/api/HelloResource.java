@@ -1,4 +1,4 @@
-package com.weblab4.islab1;
+package com.islab1.api;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
