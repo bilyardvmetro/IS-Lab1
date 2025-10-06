@@ -1,5 +1,6 @@
 package com.islab1.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -23,12 +24,13 @@ public class Person {
     @NotBlank
     @Column(name = "name", nullable = false)
     private String name; //Поле не может быть null, Строка не может быть пустой
-
+    //==================================================================================================================
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "coordinates", nullable = false)
     private Coordinates coordinates; //Поле не может быть null
-
+    //==================================================================================================================
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY) // только для ответа
     @Column(name = "creation_date", nullable = false)
     private java.time.LocalDateTime creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
 
@@ -39,11 +41,11 @@ public class Person {
     @Enumerated(EnumType.STRING)
     @Column(name = "hair_color", nullable = false)
     private Color hairColor; //Поле не может быть null
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    //==================================================================================================================
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "location_id")
     private Location location; //Поле может быть null
-
+    //==================================================================================================================
     @Min(1)
     @Column(name = "weight")
     private Integer weight; //Поле может быть null, Значение поля должно быть больше 0
