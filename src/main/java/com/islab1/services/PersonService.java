@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Stateless
@@ -112,4 +113,129 @@ public class PersonService {
     public Long countByHairColorAndLocation(Color color,  Double x, Float y, Double z) {
         return personRepository.countByHairColorAndLocation(color, x, y, z);
     }
+
+    @Transactional
+    public int importPeopleFromJson(List<Person> people) {
+        if (people == null || people.isEmpty()) {
+            throw new ImportException(List.of("Список импортируемых объектов пуст."));
+        }
+
+        List<String> errors = new ArrayList<>();
+        List<Person> prepared = new ArrayList<>();
+
+        int index = 0;
+        for (Person src : people) {
+            index++;
+            try {
+                prepared.add(prepareForImport(src));
+            } catch (IllegalArgumentException e) {
+                errors.add("Элемент " + index + ": " + e.getMessage());
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            // откат всей транзакции
+            throw new ImportException(errors);
+        }
+
+        for (Person person : prepared) {
+            personRepository.save(person);
+        }
+
+        return prepared.size();
+    }
+
+    private Person prepareForImport(Person src) {
+        if (src == null) {
+            throw new IllegalArgumentException("Объект Person не может быть null.");
+        }
+
+        Person person = new Person();
+        person.setId(null);                // всегда создаём нового
+        person.setCreationDate(null);      // заполнится в @PrePersist
+
+        // name
+        String name = src.getName();
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Поле name не может быть пустым.");
+        }
+        person.setName(name);
+
+        // coordinates
+        Coordinates srcCoords = src.getCoordinates();
+        if (srcCoords == null) {
+            throw new IllegalArgumentException("coordinates не может быть null.");
+        }
+        if (srcCoords.getX() == null) {
+            throw new IllegalArgumentException("coordinates.x не может быть null.");
+        }
+        if (srcCoords.getY() == null) {
+            throw new IllegalArgumentException("coordinates.y не может быть null.");
+        }
+        if (srcCoords.getY() <= -804) {
+            throw new IllegalArgumentException("coordinates.y должно быть больше -804.");
+        }
+
+        Coordinates coords = new Coordinates();
+        coords.setId(0); // новый объект
+        coords.setX(srcCoords.getX());
+        coords.setY(srcCoords.getY());
+        person.setCoordinates(coords);
+
+        // eyeColor / hairColor
+        if (src.getEyeColor() == null) {
+            throw new IllegalArgumentException("eyeColor не может быть null.");
+        }
+        if (src.getHairColor() == null) {
+            throw new IllegalArgumentException("hairColor не может быть null.");
+        }
+        person.setEyeColor(src.getEyeColor());
+        person.setHairColor(src.getHairColor());
+
+        // location (опционально)
+        Location srcLoc = src.getLocation();
+        if (srcLoc != null) {
+            if (srcLoc.getX() == null) {
+                throw new IllegalArgumentException("location.x не может быть null, если location задан.");
+            }
+            String locName = srcLoc.getName();
+            if (locName == null || locName.isBlank()) {
+                throw new IllegalArgumentException("location.name не может быть пустым, если location задан.");
+            }
+
+            Location loc = new Location();
+            loc.setId(0);
+            loc.setX(srcLoc.getX());
+            loc.setY(srcLoc.getY());
+            loc.setZ(srcLoc.getZ());
+            loc.setName(locName);
+            person.setLocation(loc);
+        } else {
+            person.setLocation(null);
+        }
+
+        // height
+        if (src.getHeight() <= 0) {
+            throw new IllegalArgumentException("height должно быть > 0.");
+        }
+        person.setHeight(src.getHeight());
+
+        // weight (может быть null)
+        if (src.getWeight() != null && src.getWeight() <= 0) {
+            throw new IllegalArgumentException("weight должно быть > 0, если задано.");
+        }
+        person.setWeight(src.getWeight());
+
+        // nationality
+        if (src.getNationality() == null) {
+            throw new IllegalArgumentException("nationality не может быть null.");
+        }
+        person.setNationality(src.getNationality());
+
+        // паспорт как есть (может быть null/пустой)
+        person.setPassportID(src.getPassportID());
+
+        return person;
+    }
+
 }

@@ -3,6 +3,7 @@ package com.islab1.api;
 import com.islab1.entities.Color;
 import com.islab1.entities.Country;
 import com.islab1.entities.Person;
+import com.islab1.services.ImportException;
 import com.islab1.services.PersonService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -10,7 +11,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("/people")
 @Produces(MediaType.APPLICATION_JSON) // Все методы возвращают JSON
@@ -128,4 +131,28 @@ public class PersonResource {
         }
         return personService.countByHairColorAndLocation(color, x, y, z);
     }
+
+    @POST
+    @Path("/import")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response importPeople(List<Person> people) {
+        try {
+            int imported = personService.importPeopleFromJson(people);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("status", "OK");
+            result.put("imported", imported);
+
+            return Response.ok(result).build();
+        } catch (ImportException e) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("status", "ERROR");
+            result.put("errors", e.getErrors());
+
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(result)
+                    .build();
+        }
+    }
+
 }

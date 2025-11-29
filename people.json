@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Иван",
+    "coordinates": { "x": 10, "y": 15.5 },
+    "eyeColor": "BROWN",
+    "hairColor": "RED",
+    "location": {
+      "x": 1.5,
+      "y": 2.5,
+      "z": 3.0,
+      "name": "Санкт-Петербург"
+    },
+    "height": 180,
+    "weight": 75,
+    "passportID": "1234 567890",
+    "nationality": "RUSSIA"
+  },
+  {
+    "name": "Петя",
+    "coordinates": { "x": 5, "y": 20.0 },
+    "eyeColor": "YELLOW",
+    "hairColor": "WHITE",
+    "location": null,
+    "height": 170,
+    "weight": 60,
+    "passportID": null,
+    "nationality": "JAPAN"
+  }
+]
