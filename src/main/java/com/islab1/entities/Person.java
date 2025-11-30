@@ -61,6 +61,9 @@ public class Person {
     @Column(name = "nationality", nullable = false)
     private Country nationality; //Поле не может быть null
 
+    @Column(name = "serial_number", unique = true, nullable = false)
+    private String serialNumber;
+
     @PrePersist
     protected void onCreate() {
         this.creationDate = LocalDateTime.now();

@@ -2,6 +2,7 @@
   {
     "name": "IGOR",
     "coordinates": { "x": 100, "y": 150.5 },
+    "serialNumber": "SN-0001",
     "eyeColor": "BROWN",
     "hairColor": "RED",
     "location": {
@@ -18,6 +19,7 @@
   {
     "name": "OG BUDA",
     "coordinates": { "x": 50, "y": 200.0 },
+    "serialNumber": "SN-0002",
     "eyeColor": "YELLOW",
     "hairColor": "WHITE",
     "location": null,

@@ -282,6 +282,13 @@ public class PersonService {
         // паспорт как есть (может быть null/пустой)
         person.setPassportID(src.getPassportID());
 
+        // serialNumber
+        String serial = src.getSerialNumber();
+        if (serial == null || serial.isBlank()) {
+            throw new IllegalArgumentException("serialNumber не может быть пустым.");
+        }
+        person.setSerialNumber(serial);
+
         return person;
     }
 
