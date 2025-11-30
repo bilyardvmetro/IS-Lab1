@@ -2,6 +2,7 @@ package com.islab1.services;
 
 import com.islab1.entities.*;
 import com.islab1.repository.CoordinatesRepository;
+import com.islab1.repository.ImportOperationRepository;
 import com.islab1.repository.LocationRepository;
 import com.islab1.repository.PersonRepository;
 import jakarta.ejb.Stateless;
@@ -9,6 +10,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -23,6 +25,10 @@ public class PersonService {
 
     @Inject
     private CoordinatesRepository coordinatesRepository;
+
+    @Inject
+    private ImportOperationRepository importOperationRepository;
+
 
     // CRUD
     @Transactional
@@ -114,16 +120,40 @@ public class PersonService {
         return personRepository.countByHairColorAndLocation(color, x, y, z);
     }
 
+    /**
+     * Импорт Person из JSON-массива с логированием истории операций.
+     *
+     * @param people      данные для импорта
+     * @param currentUser пользователь, запустивший импорт
+     * @return число успешно созданных объектов
+     * @throws ImportException если есть ошибки валидации (тогда Person'ы не создаются)
+     */
     @Transactional
-    public int importPeopleFromJson(List<Person> people) {
+    public int importPeopleFromJson(List<Person> people, User currentUser) {
+        // --- подготовка записи истории ---
+        ImportOperation op = new ImportOperation();
+        op.setUser(currentUser);
+        op.setStartedAt(LocalDateTime.now());
+        op.setStatus(ImportStatus.FAILED);     // по умолчанию считаем операцию неуспешной
+        op.setImportedCount(0);
+        op.setErrorCount(0);
+        op.setErrorsText(null);
+
+        var errors = new ArrayList<String>();
+
+        // отдельный случай: пустой список
         if (people == null || people.isEmpty()) {
-            throw new ImportException(List.of("Список импортируемых объектов пуст."));
+            errors.add("Список импортируемых объектов пуст.");
+            op.setErrorCount(errors.size());
+            op.setErrorsText(String.join("\n", errors));
+            op.setFinishedAt(LocalDateTime.now());
+            importOperationRepository.saveNew(op);
+            throw new ImportException(errors);
         }
 
-        List<String> errors = new ArrayList<>();
-        List<Person> prepared = new ArrayList<>();
-
+        var prepared = new ArrayList<Person>();
         int index = 0;
+
         for (Person src : people) {
             index++;
             try {
@@ -133,17 +163,34 @@ public class PersonService {
             }
         }
 
+        // если есть ошибки — пишем историю и выкидываем ImportException
         if (!errors.isEmpty()) {
-            // откат всей транзакции
+            op.setImportedCount(0);
+            op.setErrorCount(errors.size());
+            op.setErrorsText(String.join("\n", errors));
+            op.setFinishedAt(LocalDateTime.now());
+            op.setStatus(ImportStatus.FAILED);
+
+            importOperationRepository.saveNew(op);
             throw new ImportException(errors);
         }
 
+        // ошибок нет — сохраняем Person'ов
         for (Person person : prepared) {
             personRepository.save(person);
         }
 
+        op.setImportedCount(prepared.size());
+        op.setErrorCount(0);
+        op.setErrorsText(null);
+        op.setFinishedAt(LocalDateTime.now());
+        op.setStatus(ImportStatus.SUCCESS);
+
+        importOperationRepository.saveNew(op);
+
         return prepared.size();
     }
+
 
     private Person prepareForImport(Person src) {
         if (src == null) {

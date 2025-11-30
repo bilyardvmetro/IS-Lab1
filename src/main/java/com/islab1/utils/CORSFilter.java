@@ -12,7 +12,7 @@ public class CORSFilter implements Filter {
 
     private static final String ALLOWED_ORIGINS = "http://localhost:4200";
     private static final String ALLOWED_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD";
-    private static final String ALLOWED_HEADERS = "Content-Type, Authorization";
+    private static final String ALLOWED_HEADERS = "Content-Type, X-Auth-Token";
     private static final String ALLOWED_CREDENTIALS = "true";
 
     @Override

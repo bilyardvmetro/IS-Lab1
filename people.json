@@ -1,6 +1,6 @@
 [
   {
-    "name": "Alexander",
+    "name": "IGOR",
     "coordinates": { "x": 100, "y": 150.5 },
     "eyeColor": "BROWN",
     "hairColor": "RED",
@@ -10,18 +10,18 @@
       "z": 3.0,
       "name": "Санкт-Петербург"
     },
-    "height": 180,
+    "height": 220,
     "weight": 75,
-    "passportID": "1234 567890",
+    "passportID": "32313 URUEEUW",
     "nationality": "RUSSIA"
   },
   {
-    "name": "Stas",
+    "name": "OG BUDA",
     "coordinates": { "x": 50, "y": 200.0 },
     "eyeColor": "YELLOW",
     "hairColor": "WHITE",
     "location": null,
-    "height": 170,
+    "height": 150,
     "weight": 60,
     "passportID": null,
     "nationality": "JAPAN"

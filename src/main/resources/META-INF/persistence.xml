@@ -12,6 +12,7 @@
         <class>com.islab1.entities.Location</class>
         <class>com.islab1.entities.User</class>
         <class>com.islab1.entities.AuthToken</class>
+        <class>com.islab1.entities.ImportOperation</class>
 
         <properties>
             <property name="eclipselink.ddl-generation.output-mode" value="database"/>

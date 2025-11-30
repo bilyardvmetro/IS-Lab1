@@ -3,17 +3,17 @@ package com.islab1.api;
 import com.islab1.entities.Color;
 import com.islab1.entities.Country;
 import com.islab1.entities.Person;
+import com.islab1.entities.User;
 import com.islab1.services.ImportException;
 import com.islab1.services.PersonService;
+import com.islab1.services.UserService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Path("/people")
 @Produces(MediaType.APPLICATION_JSON) // Все методы возвращают JSON
@@ -21,6 +21,10 @@ import java.util.Map;
 public class PersonResource {
     @Inject
     private PersonService personService;
+
+    @Inject
+    private UserService userService;
+
 
     // CRUD
     @POST
@@ -135,24 +139,49 @@ public class PersonResource {
     @POST
     @Path("/import")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response importPeople(List<Person> people) {
-        try {
-            int imported = personService.importPeopleFromJson(people);
+    public Response importPeople(
+            @HeaderParam("X-Auth-Token") String tokenHeader,
+            @QueryParam("token") String tokenQuery,
+            List<Person> people
+    ) {
+        User currentUser = requireUser(tokenHeader, tokenQuery);
 
-            Map<String, Object> result = new HashMap<>();
+        try {
+            int imported = personService.importPeopleFromJson(people, currentUser);
+
+            var result = new java.util.HashMap<String, Object>();
             result.put("status", "OK");
             result.put("imported", imported);
 
             return Response.ok(result).build();
         } catch (ImportException e) {
-            Map<String, Object> result = new HashMap<>();
+            var result = new java.util.HashMap<String, Object>();
             result.put("status", "ERROR");
             result.put("errors", e.getErrors());
-
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(result)
                     .build();
         }
     }
+
+
+    private String resolveToken(String tokenHeader, String tokenQuery) {
+        String token = (tokenHeader != null && !tokenHeader.isBlank())
+                ? tokenHeader.trim()
+                : (tokenQuery != null ? tokenQuery.trim() : null);
+
+        if (token == null || token.isEmpty()) {
+            throw new NotAuthorizedException("Требуется токен аутентификации (X-Auth-Token или ?token=).");
+        }
+
+        return token;
+    }
+
+    private User requireUser(String tokenHeader, String tokenQuery) {
+        String tokenValue = resolveToken(tokenHeader, tokenQuery);
+        return userService.findUserByToken(tokenValue)
+                .orElseThrow(() -> new NotAuthorizedException("Недействительный токен."));
+    }
+
 
 }
